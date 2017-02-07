@@ -16,8 +16,9 @@ if [ $# -lt 4 ]; then
 fi
 
 args='';
-for i in $(seq -f '%04g' $2 $3); do
+# please note that the zero padding might be different, here hardcoded to 3
+for i in $(seq -f '%03g' $2 $3); do
 	args="$args $1$i".nii;
 done
-echo fslmerge -t $4 $args
-fslmerge -t $4 $args
+echo fslmerge -tr $4 $args $5
+fslmerge -tr $4 $args $5
