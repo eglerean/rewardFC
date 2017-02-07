@@ -11,16 +11,22 @@ find $basepath -type f -name "sw*_430.nii"|sort -n|cut -d\/ -f1-8 > $outpath/fol
 subNum=0;
 prevsubjID=-1;
 for f in $(cat $outpath/folderlist.txt); do
+	 
 	# get subject ID from the study, needed for the regressors
 	subjID=$(echo $f|cut -d\/ -f7);
 	if [ $prevsubjID -ne $subjID ]; then
 		let subNum=subNum+1;
 		prevsubjID=$subjID;
 	fi
+	
+	#limit analysis to few subj for now
+	if [ $subNum -gt 5 ]; then
+		break
+	fi
 	# get the run number for the subject
 	runID=$(echo $f|cut -d\/ -f8|sed 's/[A-z]*//g')
 	echo mkdir -p $outpath/$subNum/$runID/
-	#mkdir -p $outpath/$subNum/$runID/
+	mkdir -p $outpath/$subNum/$runID/
 	
 	# identify string for subject data
 	id=$(find $f|grep sw.*001.nii);
@@ -29,16 +35,19 @@ for f in $(cat $outpath/folderlist.txt); do
 	# identify motion parameters
 	mot=$(find $f|grep rp.*txt);
 	echo cp $mot $outpath/$subNum/$runID/rp.txt
+	cp $mot $outpath/$subNum/$runID/rp.txt
 
 	# copy the regressor file
 	regloc=$(echo $f|cut -d\/ -f1-6);
 	regloc=$regloc"/RegressorFil*/";
 	echo cp $regloc/$subjID-$runID-* $outpath/$subNum/$runID/	
+	cp $regloc/$subjID-$runID-* $outpath/$subNum/$runID/	
 
 	# do the actual merge
 	echo merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_prerocessed.nii 2
+	./merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_prerocessed.nii 2
 	if [ $? -ne 0 ]; then
 		echo "error. stopping"
 		exit 1	
-	fi 
+	fi
 done
