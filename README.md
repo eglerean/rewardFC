@@ -1,4 +1,4 @@
-# rewardFC
+# Functional connectivity for "Reward PET" study
 
 Analysis is divided into steps.
 
