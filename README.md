@@ -1,6 +1,6 @@
 # Functional connectivity for "Reward PET" study
 
-Analysis is divided into steps.
+Analysis is divided into steps. Order below.
 
 ## Step 0 - from SPM preprocessed data to NIFTI 4D files
 
