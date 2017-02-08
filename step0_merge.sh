@@ -37,15 +37,25 @@ for f in $(cat $outpath/folderlist.txt); do
 	echo cp $mot $outpath/$subNum/$runID/rp.txt
 	cp $mot $outpath/$subNum/$runID/rp.txt
 
+
+
 	# copy the regressor file
 	regloc=$(echo $f|cut -d\/ -f1-6);
 	regloc=$regloc"/RegressorFil*/";
-	echo cp $regloc/$subjID-$runID-* $outpath/$subNum/$runID/	
-	cp $regloc/$subjID-$runID-* $outpath/$subNum/$runID/	
+	for file in $(ls $regloc/$subjID-$runID-*.txt); do
+		filename=$(echo $file|cut -d\/ -f8);
+		echo $filename;
+		cat $file|tr '' '\n' >  $outpath/$subNum/$runID/$filename
+		#cp $regloc/$subjID-$runID-* $outpath/$subNum/$runID/	
+	done
+
+	# convert regressor to unix format
+	ls $outpath/$subNum/$runID/
+
 
 	# do the actual merge
 	echo merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_prerocessed.nii 2
-	./merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_prerocessed.nii 2
+	#./merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_prerocessed.nii 2
 	if [ $? -ne 0 ]; then
 		echo "error. stopping"
 		exit 1	
