@@ -1,7 +1,8 @@
 clear all
 close all
-addpath(genpath('/m/nbe/scratch/braindata/shared/toolboxes/bramila/bramila/'))
+addpath(genpath('bramila/'))
 
+if(0)
 %% testing regressors
 TR=2;
 T=430;
@@ -31,6 +32,7 @@ for t=1:T
 end
 
     error('stop')
+end
 
 %%
 
@@ -41,16 +43,20 @@ R=length(rois);
 ids=find(triu(ones(R),1)); 
 % for each subject
 
-subjbasepath='';
+subjbasepath='/home/scratch/eglerean/food/dataout/';
 NS=5;
 Nruns=2;
 T=430;
 TR=2;
-HDL=5; % haemodynamic lag in seconds
-BLlen = 0; % number of seconds used from baseline, before trial starts
+
+% these were for block design
+% HDL=5; % haemodynamic lag in seconds
+% BLlen = 0; % number of seconds used from baseline, before trial starts
+
+
 % extract roi time series  
-OVERWRITE=0;
-allFD=zeros(T,NS);
+OVERWRITE=1;
+allFD=zeros(T,Nruns,NS); % for storing framewise displacement
 alllens=[];
 for s = 1:NS
 	for runid=1:Nruns
@@ -59,21 +65,21 @@ for s = 1:NS
         
 		if(exist(infile)~=2 || OVERWRITE == 1) % if we are here, we need to do preprocessing
 			disp(['Creating file ' infile])
-			tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '.nii']
+			tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '/epi_preprocessed_MNIFSL.nii']
 			cfg=[];
-			cfg.StdTemplate='/triton/becs/scratch/braindata/shared/toolboxes/bramila/bramila/external/SPM/MNI152_spmsize_2mm_mask.nii';
+			cfg.StdTemplate='/home/VSSHP/glereane/code/bramila/external/MNI152_T1_2mm_brain_mask.nii';
 			cfg.fileID=[num2str(s) '-' num2str(runid)];
 			cfg.infile=tempinfile;
 			cfg.TR=TR;
 			cfg.mask=ones([91 109 91]);
 			% add motion regression
-			motionfile=[subjbasepath num2str(s) '/' num2str(runid) '.txt'];
+			motionfile=[subjbasepath num2str(s) '/' num2str(runid) '/rp.txt'];
 			disp(motionfile)
 			cfg.motionparam=motionfile;
 			cfg.write=0;
 			cfg.motion_reg_type='volterra';
 			cfg.detrend_type='Savitzky-Golay';
-			outpath=[subjbasepath num2str(s) '/mot/'];
+			outpath=[subjbasepath num2str(s) '/' num2str(runid) '/mot/'];
 			mkdir(outpath);
 			cfg.outpath=outpath;
 			cfg.inpath=outpath;
@@ -87,7 +93,8 @@ for s = 1:NS
 			cfgtemp.vol=cfg.vol;
 			cfgtemp.rois=rois;
 			roits=bramila_roiextract(cfgtemp);
-			save(infile,'roits');
+			save(infile,'roits');	
+			error('stop here please');
 		else
 			disp(['File ' infile ' exists.'])
 			load(infile); % variable roits
