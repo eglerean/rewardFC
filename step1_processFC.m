@@ -65,7 +65,7 @@ for s = 1:NS
         
 		if(exist(infile)~=2 || OVERWRITE == 1) % if we are here, we need to do preprocessing
 			disp(['Creating file ' infile])
-			tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '/epi_preprocessed_MNIFSL.nii']
+			tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '/epi_preprocessed_FSLMNI.nii']
 			cfg=[];
 			cfg.StdTemplate='/home/VSSHP/glereane/code/bramila/external/MNI152_T1_2mm_brain_mask.nii';
 			cfg.fileID=[num2str(s) '-' num2str(runid)];
