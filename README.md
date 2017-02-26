@@ -11,3 +11,6 @@ Furthermore, create the ROIs using the matlab script inside the ROIs subfolder. 
 
 ## Step 1 - further preprocessing for connectivity
 
+
+
+
