@@ -66,7 +66,7 @@ for f in $(cat $outpath/folderlist.txt); do
 	mni2mm=$FSLDIR"/data/standard/MNI152_T1_2mm_brain.nii.gz"
 	ref=$mni2mm;
 
-	echo flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl.mat -applyxfm
-	flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl.mat -applyxfm
+	echo flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl2mm.mat -applyxfm
+	flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl2mm.mat -applyxfm
 	rm $outpath/$subNum/$runID/epi_preprocessed.nii
 done
