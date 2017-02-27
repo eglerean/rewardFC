@@ -1,30 +1,31 @@
 #!/bin/bash
-basepath='/home/scratch/lauri/RewardPET/';
-outpath='/home/scratch/eglerean/food/dataout/';
+basepath='/scratch/lauri/RewardPET/';
+outpath='/scratch/eglerean/food/dataout/';
 
 # set FSL output to NII without gz
 export FSLOUTPUTTYPE=NIFTI
 
 # First we find which folders contain data. There are two runs per subject. Each run has length 430
-find $basepath -type f -name "sw*_430.nii"|sort -n|cut -d\/ -f1-8 > $outpath/folderlist.txt
+find $basepath -type f -name "sw*_430.nii"|sort -n|cut -d\/ -f1-7 > $outpath/folderlist.txt
 
 subNum=0;
 prevsubjID=-1;
 for f in $(cat $outpath/folderlist.txt); do
 	 
 	# get subject ID from the study, needed for the regressors
-	subjID=$(echo $f|cut -d\/ -f7);
+	subjID=$(echo $f|cut -d\/ -f6);
 	if [ $prevsubjID -ne $subjID ]; then
 		let subNum=subNum+1;
 		prevsubjID=$subjID;
 	fi
 	
+
 	#limit analysis to few subj for now
 	if [ $subNum -gt 5 ]; then
 		break
 	fi
 	# get the run number for the subject
-	runID=$(echo $f|cut -d\/ -f8|sed 's/[A-z]*//g')
+	runID=$(echo $f|cut -d\/ -f7|sed 's/[A-z]*//g')
 	echo mkdir -p $outpath/$subNum/$runID/
 	mkdir -p $outpath/$subNum/$runID/
 	
@@ -40,10 +41,10 @@ for f in $(cat $outpath/folderlist.txt); do
 
 
 	# copy the regressor file
-	regloc=$(echo $f|cut -d\/ -f1-6);
+	regloc=$(echo $f|cut -d\/ -f1-5);
 	regloc=$regloc"/RegressorFil*/";
 	for file in $(ls $regloc/$subjID-$runID-*.txt); do
-		filename=$(echo $file|cut -d\/ -f8);
+		filename=$(echo $file|cut -d\/ -f7);
 		echo $filename;
 		newfilename=$(echo $filename|cut -d- -f2-);
 		cat $file|tr '' '\n' >  $outpath/$subNum/$runID/$newfilename
@@ -59,7 +60,7 @@ for f in $(cat $outpath/folderlist.txt); do
 	./merge_it.sh $ide 1 430 $outpath/$subNum/$runID/epi_preprocessed.nii 2
 	if [ $? -ne 0 ]; then
 		echo "error. stopping"
-		exit 1	
+		#exit 1	
 	fi
 
 	#convert the output to MNI FSL boundary box
@@ -68,5 +69,5 @@ for f in $(cat $outpath/folderlist.txt); do
 
 	echo flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl2mm.mat -applyxfm
 	flirt -in $outpath/$subNum/$runID/epi_preprocessed.nii -ref $ref -out $outpath/$subNum/$runID/epi_preprocessed"_FSLMNI.nii" -init spm2fsl2mm.mat -applyxfm
-	rm $outpath/$subNum/$runID/epi_preprocessed.nii
+	rm -f $outpath/$subNum/$runID/epi_preprocessed.nii
 done
