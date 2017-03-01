@@ -52,6 +52,7 @@ TR=2;
 % these were for block design
 % HDL=5; % haemodynamic lag in seconds
 % BLlen = 0; % number of seconds used from baseline, before trial starts
+HRF=bramila_hrf(TR);
 
 
 % extract roi time series  
@@ -102,14 +103,28 @@ for s = 1:NS
 		roits=zscore(roits);
         
         % now load regressor time series
-        
-		reg=load(['/triton/becs/scratch/braindata/eglerean/motfmri/motfmri/regressor_files_mitmot/' num2str(s) '-' num2str(runid) '.txt']);
-		[aa bb]=corr(reg(:,1),[1:size(reg,1)]')
-        
-		len=ceil((min(reg(find(reg(:,4)>0),3))+BLlen)/TR); % for all the non zero trials, find the shortest interval in TRs 
-														% Note the +BLlen for the BLlen seconds of baseline before trial starts
-		ends=ceil((HDL+reg(:,2)+reg(:,3))/1.7); % for each trial compute the ending time plus haemodyn delay in TRs
-		windows=[ends-len ends]; % windows in TRs
+        for c=1:4 % four conditions
+          
+            temp=load(['/m/nbe/scratch/braindata/eglerean/food/data/1/regressors/' num2str(s) '-' num2str(runid) '-' num2str(c) '.txt']);
+            % from temp to time series
+            tempregts=zeros(T,1);
+            for t=1:length(temp)
+                tempregts(round(temp(t)/TR))=1; % stick function for the event
+            end
+            stickregts(:,c)=tempregts;
+            
+            tempregts=conv(tempregts,HRF);
+            regts(:,c)=tempregts(1:T);
+        end
+        regtsID=zeros(T,1);
+        for t=1:T
+            vec=regts(t,:);
+            temp=find(max(vec)==vec);
+            win=temp(end);
+            regtsID(t)=win; % this will be used to finf Times Of Interest (TOI)
+        end
+		
+		
 		
 		motionfile=[subjbasepath num2str(s) '/' num2str(runid) '.txt'];
         
@@ -118,8 +133,7 @@ for s = 1:NS
 		cfgtemp.motionparam=motionfile;
 		cfgtemp.prepro_suite='spm';
 		FD=bramila_framewiseDisplacement(cfgtemp);
-		allFD(:,s-3)=FD;
-		alllens(end+1)=len;
+		allFD(:,s,runid)=FD;
 		outlabels={'mit','mot'};
 		for mm=1:2 % 1 == mit, 2 == mot
 			for cc=[0 2 4 6]
@@ -196,4 +210,4 @@ for s = 1:NS
 
 	end
 end	
-save FCsession allFD alllens rois R ids NS Nruns
+save FCsession allFD  rois R ids NS Nruns
