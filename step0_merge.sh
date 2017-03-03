@@ -21,9 +21,10 @@ for f in $(cat $outpath/folderlist.txt); do
 	
 
 	#limit analysis to few subj for now
-	if [ $subNum -gt 5 ]; then
-		break
-	fi
+	#if [ $subNum -gt 5 ]; then
+	#	break
+	#fi
+
 	# get the run number for the subject
 	runID=$(echo $f|cut -d\/ -f7|sed 's/[A-z]*//g')
 	echo mkdir -p $outpath/$subNum/$runID/
