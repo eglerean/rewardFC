@@ -43,8 +43,8 @@ R=length(rois);
 ids=find(triu(ones(R),1));
 % for each subject
 
-subjbasepath='/home/scratch/eglerean/food/dataout/';
-subjbasepath='/m/nbe/scratch/braindata/eglerean/food/dataout/';
+subjbasepath='/scratch/eglerean/food/dataout/';
+%subjbasepath='/m/nbe/scratch/braindata/eglerean/food/dataout/';
 NS=5;
 Nruns=2;
 T=430;
@@ -70,7 +70,7 @@ for s = 1:NS
             tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '/epi_preprocessed_FSLMNI.nii']
             cfg=[];
             cfg.StdTemplate='/home/glereane/code/bramila/external/MNI152_T1_2mm_brain_mask.nii';
-            cfg.StdTemplate='/m/nbe/scratch/braindata/shared/toolboxes/bramila/bramila/external/MNI152_T1_2mm_brain_mask.nii';
+            %cfg.StdTemplate='/m/nbe/scratch/braindata/shared/toolboxes/bramila/bramila/external/MNI152_T1_2mm_brain_mask.nii';
             cfg.fileID=[num2str(s) '-' num2str(runid)];
             cfg.infile=tempinfile;
             cfg.TR=TR;
@@ -97,7 +97,6 @@ for s = 1:NS
             cfgtemp.rois=rois;
             roits=bramila_roiextract(cfgtemp);
             save(infile,'roits');
-            error('stop here please');
         else
             disp(['File ' infile ' exists.'])
             load(infile); % variable roits
@@ -194,10 +193,10 @@ for s = 1:NS
             clear avgnet_par_M
             clear me
             error('stop')
-        end
+        end % end of cycle that stores the networks
         
         
         
-    end
-end
+    end % end of cycle for the runs
+end % end of cycle for the subjects
 save FCsession allFD  rois R ids NS Nruns
