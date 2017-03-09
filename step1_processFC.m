@@ -45,7 +45,7 @@ ids=find(triu(ones(R),1));
 
 subjbasepath='/scratch/eglerean/food/dataout/';
 %subjbasepath='/m/nbe/scratch/braindata/eglerean/food/dataout/';
-NS=5;
+NS=34;
 Nruns=2;
 T=430;
 TR=2;
@@ -57,7 +57,7 @@ HRF=bramila_hrf(TR);
 
 
 % extract roi time series
-OVERWRITE=0;
+OVERWRITE=1;
 allFD=zeros(T,Nruns,NS); % for storing framewise displacement
 alllens=[];
 for s = 1:NS
@@ -66,7 +66,8 @@ for s = 1:NS
         infile=[subjbasepath '/' num2str(s) '/' num2str(runid) '/roists.mat'];
         
         if(exist(infile)~=2 || OVERWRITE == 1) % if we are here, we need to do preprocessing
-            disp(['Creating file ' infile])
+           	disp(['>>> Performing preprocessing for functional connectivity']);
+			disp(['Creating file ' infile])
             tempinfile=[subjbasepath num2str(s) '/' num2str(runid) '/epi_preprocessed_FSLMNI.nii']
             cfg=[];
             cfg.StdTemplate='/home/glereane/code/bramila/external/MNI152_T1_2mm_brain_mask.nii';
@@ -86,24 +87,30 @@ for s = 1:NS
             mkdir(outpath);
             cfg.outpath=outpath;
             cfg.inpath=outpath;
+			disp(['    Detrending...']);
             dtdata=bramila_detrend(cfg);
             cfg.vol=dtdata;
+			disp(['    Regressing motion params'])
             cfg=bramila_motionregress(cfg);
             save_nii(make_nii(cfg.vol),[outpath num2str(runid) '.nii'])
             % filtering
+			disp(['    Temporal filtering'])
             cfg= bramila_filter(cfg);
             
             cfgtemp.vol=cfg.vol;
             cfgtemp.rois=rois;
+	    cfgtemp.usemean=1;
+			disp(['    Extracting ROIs timeseries'])
             roits=bramila_roiextract(cfgtemp);
             save(infile,'roits');
         else
-            disp(['File ' infile ' exists.'])
+            disp(['File ' infile ' exists, loading it.'])
             load(infile); % variable roits
         end
         roits=zscore(roits);
         
         % now load regressor time series
+		disp(['>>> Loading regressors'])
         for c=1:4 % four conditions
             
             temp=load([subjbasepath '/' num2str(s) '/' num2str(runid) '/' num2str(runid) '-' num2str(c) '.txt']);
@@ -126,21 +133,21 @@ for s = 1:NS
         end
         
         
-        
-        motionfile=[subjbasepath num2str(s) '/' num2str(runid) '/rp.txt'];
-        
-        
+        disp(['>>> Calculating Framewise Displacement'])
+        motionfile=[subjbasepath num2str(s) '/' num2str(runid) '/rp.txt'];        
         cfgtemp=[];
         cfgtemp.motionparam=motionfile;
         cfgtemp.prepro_suite='spm';
         FD=bramila_framewiseDisplacement(cfgtemp);
         allFD(:,s,runid)=FD;
+
+		disp(['>>> Calculating connectivity matrices'])
         outlabels={'appetising'
             'bland'
             'cars'
             'fixations' };
         for cc=1:2 % only conditions 1 and 2
-            
+          
             
             toi=find(regtsID==cc);
             
@@ -151,7 +158,7 @@ for s = 1:NS
             timemask=repmat(timemask,1,R);
             mfdM=mean(FD(toi));
             if(1)
-                % don't correct the average
+                % don't correct the average, i.e. simple temporal masking
                 avgnet_M=corr(timemask.*roits);
                 avgnet_par_M=partialcorr(timemask.*roits);
             else
@@ -165,6 +172,7 @@ for s = 1:NS
             end
             
             % compute null distr for avg and max
+			disp(['>>> Compute individual null distribution using surrogate roi time series and the max statistics'])
             subjperms=zeros(50000,1);
             X=fft(zscore(roits));
             XA=abs(X);
@@ -181,18 +189,14 @@ for s = 1:NS
                 subjperms(i)=max(temp);
             end
             
-            disp(['Saving ' subjbasepath num2str(s) '/' num2str(runid) '_' num2str(cc) '_nets.mat']);
-            save([subjbasepath num2str(s) '/' num2str(runid) '/' outlabels{cc} '_' num2str(cc) '_nets.mat'],'mfd','toi','avgnet_M','avgnet_par_M','mfdM','subjperms')
+            disp(['Saving ' subjbasepath num2str(s) '/run' num2str(runid) '_cond' num2str(cc) '_nets.mat']);
+            save([subjbasepath num2str(s) '/run' num2str(runid) '_cond'  num2str(cc) '_nets.mat'],'toi','avgnet_M','avgnet_par_M','mfdM','subjperms')
             %if(any(mfd>0.5/len)) disp(num2str(mfd)); end
-            clear nets
-            clear mfd
             clear toi
-            clear avgnet
-            clear avgnet_par
             clear avgnet_M
             clear avgnet_par_M
-            clear me
-            error('stop')
+			clear mfdM
+			clear subjperms
         end % end of cycle that stores the networks
         
         
