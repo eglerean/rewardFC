@@ -203,4 +203,4 @@ for s = 1:NS
         
     end % end of cycle for the runs
 end % end of cycle for the subjects
-save FCsession allFD  rois R ids NS Nruns
+save([subjbasepath '/FCsession.mat'], 'allFD',  'rois', 'R', 'ids', 'NS', 'Nruns');
